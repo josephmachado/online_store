@@ -1,0 +1,15 @@
+config:
+  send_anonymous_usage_stats: False
+
+transform:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      threads: 1
+      host: warehouse_db
+      port: 5432
+      user: sde
+      pass: password
+      dbname: warehouse
+      schema: store

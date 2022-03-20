@@ -1,0 +1,193 @@
+version: "3.7"
+
+services:
+  dagster_metadata_db:
+    image: postgres:11
+    container_name: dagster_metadata_db
+    environment:
+      POSTGRES_USER: "postgres_user"
+      POSTGRES_PASSWORD: "postgres_password"
+      POSTGRES_DB: "postgres_db"
+    networks:
+      - dagster_network
+
+  dagster_code_runner:
+    build:
+      context: .
+      dockerfile: ./container/user_code/Dockerfile
+    container_name: dagster_code_runner
+    image: dagster_code_runner_image
+    restart: always
+    environment:
+      DAGSTER_POSTGRES_USER: "postgres_user"
+      DAGSTER_POSTGRES_PASSWORD: "postgres_password"
+      DAGSTER_POSTGRES_DB: "postgres_db"
+      DAGSTER_CURRENT_IMAGE: "dagster_code_runner_image"
+      WAREHOUSE_USER: sde
+      WAREHOUSE_PASSWORD: password
+      WAREHOUSE_DB: warehouse
+      WAREHOUSE_HOST: warehouse_db
+      WAREHOUSE_PORT: 5432
+      CUSTOMER_DB_USER: customer_ms
+      CUSTOMER_DB_PASSWORD: password
+      CUSTOMER_DB_DB: customer
+      CUSTOMER_DB_HOST: customer_db
+      AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+      AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      AWS_REGION_NAME: us-east-1
+      AWS_ENDPOINT_URL: http://cloud-store:9000
+    networks:
+      - dagster_network
+    depends_on:
+      - risk_api
+      - data_generator
+      - cloud-store
+  
+  warehouse_db:
+    image: postgres:13
+    container_name: warehouse_db
+    environment:
+      POSTGRES_USER: sde
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: warehouse
+    volumes:
+      - ./warehouse_db_setup:/docker-entrypoint-initdb.d
+    restart: always
+    ports:
+      - "5433:5432"
+    networks:
+      - dagster_network
+
+  dagit_server:
+    build:
+      context: .
+      dockerfile: ./container/dagster/Dockerfile
+    entrypoint:
+      - dagit
+      - -h
+      - "0.0.0.0"
+      - -p
+      - "3000"
+      - -w
+      - workspace.yaml
+    container_name: dagit_server
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+    environment:
+      DAGSTER_POSTGRES_USER: "postgres_user"
+      DAGSTER_POSTGRES_PASSWORD: "postgres_password"
+      DAGSTER_POSTGRES_DB: "postgres_db"
+    volumes: # Make docker client accessible so we can terminate containers from dagit
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - dagster_network
+    depends_on:
+      - dagster_metadata_db
+      - dagster_code_runner
+
+  dagster_daemon:
+    build:
+      context: .
+      dockerfile: ./container/dagster/Dockerfile
+    entrypoint:
+      - dagster-daemon
+      - run
+    container_name: dagster_daemon
+    restart: on-failure
+    environment:
+      DAGSTER_POSTGRES_USER: "postgres_user"
+      DAGSTER_POSTGRES_PASSWORD: "postgres_password"
+      DAGSTER_POSTGRES_DB: "postgres_db"
+    volumes: # Make docker client accessible so we can launch containers using host docker
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - dagster_network
+    depends_on:
+      - dagster_metadata_db
+      - dagster_code_runner
+
+  cloud-store:
+    image: quay.io/minio/minio
+    container_name: cloud-store
+    environment:
+      MINIO_ROOT_USER: AKIAIOSFODNN7EXAMPLE
+      MINIO_ROOT_PASSWORD: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    command: server /data --console-address ":9001"
+    ports:
+      - 9000:9000
+      - 9001:9001
+    networks:
+      - dagster_network
+
+  customer_db:
+    image: postgres:13
+    container_name: customer_db
+    environment:
+      POSTGRES_USER: customer_ms
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: customer
+    volumes:
+      - ./customer_db_setup:/docker-entrypoint-initdb.d
+    restart: always
+    ports:
+      - "5432:5432"
+    networks:
+      - dagster_network
+  
+  data_generator:
+    build:
+        context: .
+        dockerfile: ./container/datagenerator/Dockerfile
+    entrypoint:
+      - python
+      - ./generate_fake_orders_customers.py
+    container_name: data_generator
+    restart: on-failure
+    networks:
+      - dagster_network
+    depends_on:
+      - customer_db
+      - cloud-store
+  
+  risk_api:
+    build:
+        context: .
+        dockerfile: ./container/risk_api/Dockerfile
+    container_name: risk_api
+    restart: on-failure
+    ports:
+      - "80:80"
+    networks:
+      - dagster_network
+  
+  dashboard:
+    image: metabase/metabase
+    container_name: dashboard
+    volumes:
+      - ./metabase-data:/metabase-data
+    environment:
+      MB_DB_FILE: /metabase-data/metabase.db  
+    ports:
+      - "3001:3000"
+    networks:
+      - dagster_network
+  
+  formatter:
+    image: formatter
+    container_name: formatter
+    build:
+        context: .
+        dockerfile: ./container/formatter/Dockerfile
+    volumes:
+      - ./:/code
+    networks:
+      - dagster_network
+    depends_on:
+      - risk_api
+
+networks:
+  dagster_network:
+    driver: bridge
+    name: dagster_network

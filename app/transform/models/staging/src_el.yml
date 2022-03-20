@@ -1,0 +1,25 @@
+version: 2
+
+sources:
+  - name: store
+    description: Data from application database, brought in by an EL process.
+    tables:
+      - name: customers
+        columns:
+        - name: customer_id
+          tests:
+            - not_null
+
+      - name: orders
+        columns:
+        - name: order_id
+          tests:
+            - not_null
+        - name: customer_id
+          tests:
+            - relationships:
+                to: source('store', 'customers')
+                field: customer_id
+      
+      - name: states
+      - name: customer_risk_score

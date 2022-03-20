@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: stg_el__customers
+    columns:
+      - name: customer_id
+        tests:
+          - not_null
+          - unique
+  - name: stg_el__orders
+  - name: stg_el__customer_risk_score

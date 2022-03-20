@@ -45,4 +45,3 @@ When you are done, you can spin down your containers using the following command
 ```bash
 make down
 ```
-# online_store
