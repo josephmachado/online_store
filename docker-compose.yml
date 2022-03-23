@@ -38,6 +38,8 @@ services:
       AWS_ENDPOINT_URL: http://cloud-store:9000
     networks:
       - dagster_network
+    ports:
+      - "8080:8080"
     depends_on:
       - risk_api
       - data_generator

@@ -1,10 +1,10 @@
 # Data engineering project: data extraction to analysis
 
-For more details read the blog [here](http://localhost:1313/post/data-engineering-project/)(coming soon)
+For more details read the blog [here](https://www.startdataengineering.com/post/data-engineering-project-e2e/)
 
 # Architecture diagram
 
-`ADD ARCH DIAGRAM HERE`
+![Architecture](/assets/images/arch.png)
 # Running the project
 
 ## Prerequisites
