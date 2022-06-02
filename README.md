@@ -53,5 +53,5 @@ make down
 1. [Dagster docs](https://docs.dagster.io/tutorial)
 2. [Metabase docs](https://www.metabase.com/learn/getting-started/getting-started.html)
 3. [FastAPI docker](https://fastapi.tiangolo.com/deployment/docker/)
-4. [Dagster docker setup](https://github.com/dagster-io/dagster/tree/0.14.3/examples/deploy_docker)
+4. [Dagster docker setup](https://github.com/dagster-io/dagster/tree/0.14.17/examples/deploy_docker)
 5. [dbt docs](https://docs.getdbt.com/)

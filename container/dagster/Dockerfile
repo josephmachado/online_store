@@ -4,11 +4,11 @@
 FROM python:3.7-slim
 
 RUN pip install \
-    dagster==0.14.3 \
-    dagster-graphql==0.14.3 \
-    dagit==0.14.3 \
-    dagster-postgres==0.14.3 \
-    dagster-docker==0.14.3 \
+    dagster==0.14.17 \
+    dagster-graphql==0.14.17 \
+    dagit==0.14.17 \
+    dagster-postgres==0.14.17 \
+    dagster-docker==0.14.17 \
     ipython_genutils==0.2.0
 
 # Set $DAGSTER_HOME and copy dagster instance and workspace YAML there
