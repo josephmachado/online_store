@@ -5,47 +5,61 @@ For more details read the blog [here](https://www.startdataengineering.com/post/
 # Architecture diagram
 
 ![Architecture](/assets/images/arch.png)
-# Running the project
+## Setup
 
-## Prerequisites
+### Pre-requisites
 
-1. [Docker](https://docs.docker.com/engine/install/) and [Docker Compose](https://docs.docker.com/compose/install/) v1.27.0
-2. [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+1. [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+2. [Github account](https://github.com/)
+3. [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) 
+4. [AWS account](https://aws.amazon.com/) 
+5. [AWS CLI installed](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) and [configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
+6. [Docker](https://docs.docker.com/engine/install/) with at least 4GB of RAM and [Docker Compose](https://docs.docker.com/compose/install/) v1.27.0 or later
 
-Clone the repo using
+Read **[this post](https://www.startdataengineering.com/post/data-engineering-projects-with-free-template/)**, for information on setting up CI/CD, DB migrations, IAC(terraform), "make" commands and automated testing.
 
-```bash
+Run these commands to setup your project locally and on the cloud.
+
+```shell
+# Clone the code as shown below.
 git clone https://github.com/josephmachado/online_store.git
 cd online_store
+
+# Local run & test
+make up # start the docker containers on your computer & runs migrations under ./migrations
+make ci # Runs auto formatting, lint checks, & all the test files under ./tests
+
+# Create AWS services with Terraform
+make tf-init # Only needed on your first terraform run (or if you add new providers)
+make infra-up # type in yes after verifying the changes TF will make
+
+# Wait until the EC2 instance is initialized, you can check this via your AWS UI
+# See "Status Check" on the EC2 console, it should be "2/2 checks passed" before proceeding
+
+make cloud-metabase # this command will forward Metabase port from EC2 to your machine and opens it in the browser
+
+make cloud-dagster # this command will forward Dagster port from EC2 to your machine and opens it in the browser
 ```
 
-## Spin up
-
-In your project directory run the following command.
+You can connect metabase to the warehouse with the following credentials
 
 ```bash
-make up
-docker ps # to see all the components
+WAREHOUSE_USER: sde
+WAREHOUSE_PASSWORD: password
+WAREHOUSE_DB: warehouse
+WAREHOUSE_HOST: warehouse_db
+WAREHOUSE_PORT: 5432
 ```
 
-Wait for about a minute. You can log into
+Refer to [this doc](https://www.metabase.com/docs/latest/users-guide/07-dashboards.html) for creating a Metabase dashboard.
 
-1. Dagster UI at [http://localhost:3000/](http://localhost:3000/)
-2. Metabase UI at [http://localhost:3001/](http://localhost:3001/). Use the following credentials
+### Tear down infra
 
-```bash
-username: james.holden@rocinante.com
-password: password1234
-```
+After you are done, make sure to destroy your cloud infrastructure.
 
-Make sure to switch on the data pipeline in dagster UI, and let it run a few times. In Metabase UI, search for and click on `Online store overview` using the search bar on the top left corner. This will take you to the dashboard which is fed with the transformed data from the data pipeline.
-
-## Tear down
-
-When you are done, you can spin down your containers using the following command.
-
-```bash
-make down
+```shell
+make down # Stop docker containers on your computer
+make infra-down # type in yes after verifying the changes TF will make
 ```
 
 ## References
