@@ -44,7 +44,7 @@ services:
       - risk_api
       - data_generator
       - cloud-store
-  
+
   warehouse_db:
     image: postgres:13
     container_name: warehouse_db
@@ -81,7 +81,8 @@ services:
       DAGSTER_POSTGRES_USER: "postgres_user"
       DAGSTER_POSTGRES_PASSWORD: "postgres_password"
       DAGSTER_POSTGRES_DB: "postgres_db"
-    volumes: # Make docker client accessible so we can terminate containers from dagit
+    volumes:
+      # Make docker client accessible so we can terminate containers from dagit
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - dagster_network
@@ -102,7 +103,8 @@ services:
       DAGSTER_POSTGRES_USER: "postgres_user"
       DAGSTER_POSTGRES_PASSWORD: "postgres_password"
       DAGSTER_POSTGRES_DB: "postgres_db"
-    volumes: # Make docker client accessible so we can launch containers using host docker
+    volumes:
+      # Make docker client accessible so we can launch containers using host docker
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - dagster_network
@@ -137,11 +139,11 @@ services:
       - "5432:5432"
     networks:
       - dagster_network
-  
+
   data_generator:
     build:
-        context: .
-        dockerfile: ./container/datagenerator/Dockerfile
+      context: .
+      dockerfile: ./container/datagenerator/Dockerfile
     entrypoint:
       - python
       - ./generate_fake_orders_customers.py
@@ -152,36 +154,32 @@ services:
     depends_on:
       - customer_db
       - cloud-store
-  
+
   risk_api:
     build:
-        context: .
-        dockerfile: ./container/risk_api/Dockerfile
+      context: .
+      dockerfile: ./container/risk_api/Dockerfile
     container_name: risk_api
     restart: on-failure
     ports:
       - "80:80"
     networks:
       - dagster_network
-  
+
   dashboard:
     image: metabase/metabase
     container_name: dashboard
-    volumes:
-      - ./metabase-data:/metabase-data
-    environment:
-      MB_DB_FILE: /metabase-data/metabase.db  
     ports:
       - "3001:3000"
     networks:
       - dagster_network
-  
+
   formatter:
     image: formatter
     container_name: formatter
     build:
-        context: .
-        dockerfile: ./container/formatter/Dockerfile
+      context: .
+      dockerfile: ./container/formatter/Dockerfile
     volumes:
       - ./:/code
     networks:
